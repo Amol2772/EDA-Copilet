@@ -1,5 +1,6 @@
-﻿venv/
+venv/
 .env
 __pycache__/
-reports/*.png
-.ipynb_checkpoints/
+*.pyc
+reports/
+*.docx
