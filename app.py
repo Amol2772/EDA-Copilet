@@ -68,16 +68,29 @@ if prompt:
 
     with st.chat_message("assistant"):
         with st.spinner("Analyzing..."):
+            # snapshot reports folder before agent call
+            os.makedirs("reports", exist_ok=True)
+            before = set(os.listdir("reports"))
+
             try:
                 result = agent.invoke({"messages": st.session_state.messages})
                 response = extract_text(result)
                 if not response:
-                    response = "⚠️ Agent returned an empty response. Try rephrasing."
+                    response = "⚠️ Agent returned empty response. Try rephrasing."
             except Exception as e:
                 response = f"⚠️ Error: {str(e)[:300]}"
+
+            # find newly created PNGs
+            after = set(os.listdir("reports"))
+            new_charts = [f for f in (after - before) if f.endswith(".png")]
+
         st.write(response)
-        for path in re.findall(r"reports/[\w\-.]+\.png", response):
-            if os.path.exists(path):
-                st.image(path)
+
+        # show new charts inline, small size
+        if new_charts:
+            cols = st.columns(min(len(new_charts), 3))
+            for i, chart in enumerate(sorted(new_charts)):
+                with cols[i % 3]:
+                    st.image(f"reports/{chart}", width=300, caption=chart.replace("_", " ").replace(".png", ""))
 
     st.session_state.messages.append({"role": "assistant", "content": response})
